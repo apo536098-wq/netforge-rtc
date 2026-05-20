@@ -1,0 +1,52 @@
+                                                                                         NETFORGE-RTC
+
+                                                               WebRTC Protokol Manipülasyonu ve Paket Fuzzing Çerçevesi Proje Raporu 
+
+
+Proje Adı:                      NetForge-RTC: WebRTC                     Kurum:           İstinye  
+                                Packet Manipulation                                       Üniversitesi
+                                Framework                 
+
+
+Geliştirici:                   Kadir Erkan                                Program:        Bilişim Güvenliği
+                                                                                          Teknolojisi
+
+
+
+Zafiyet Referansı:             CVE-2025-4122 Hedefli                      Dil/Kütüphane:                 Python 3 / Scapy                
+                               simülasyon                                                                / Socket
+
+
+
+
+
+1. Özet ve Proje Amacı
+Bu proje, gerçek zamanlı ses/video iletişimi sağlayan WebRTC (Web Real-Time Communication) ve
+FaceTime mimarilerinde paket manipülasyonu (Packet Injection) ve girdi doğrulama (Input Validation)
+zafiyetlerini analiz etmek amacıyla geliştirilmiş akademik tabanlı bir güvenlik test aracıdır. Projenin ana odağı,
+ağ katmanında manipüle edilen RTP (Real-Time Transport Protocol) ve RTCP paketlerinin, hedef sistemlerin
+bellek yönetiminde (özellikle uzaktan kod yürütme veya arabelleğin taşması durumlarında) oluşturduğu
+anomalileri kontrollü bir laboratuvar ortamında gözlemlemektir.
+
+
+
+
+2. Tehdit Modeli ve Teorik Altyapı
+Medya akış protokolleri, yüksek hızda veri aktarımı sağlamak için genellikle UDP katmanı üzerinde çalışır ve
+performans amacıyla sıkı bir asenkron mimariye sahiptir. CVE-2025-4122 benzeri kritik ağ zafiyetleri, gelen
+paketin uzunluk parametrelerinin (Lpacket) ve başlık verilerinin (Header) hedef uygulama tarafından
+doğrulanmadan bellek arabelleğine kopyalanması sonucu oluşur.
+Eğer pakette belirtilen payload uzunluk değeri gerçek veriden büyük gösterilirse (Payloadsize > Bufferallocated),
+sistem hafızasında komşu sektörlerin üzerine yazılabilir. Bu çerçevede geliştirilen yazılım, asimetrik paket
+yapıları üreterek parser (ayrıştırıcı) motorların kararlılığını test eder.
+
+
+
+
+3. Protokol Analizi ve Manipülasyon Matrisi
+Yazılımın hedef aldığı ve fuzzer modülleri tarafından manipüle edilen temel protokol bileşenleri aşağıdaki
+tabloda detaylandırılmıştır: 
+
+
+
+
