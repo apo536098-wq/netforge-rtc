@@ -1,0 +1,66 @@
+================================================================================
+                                 NETFORGE-RTC
+    WebRTC Protokol Manipülasyonu ve Paket Fuzzing Çerçevesi Proje Raporu
+================================================================================
+
+KURUM: İstinye Üniversitesi
+PROGRAM: Bilişim Güvenliği Teknolojisi
+GELİŞTİRİCİ: Kadir Erkan
+ZAFİYET REFERANSI: CVE-2025-4122 Hedefli Simülasyon
+DİL / KÜTÜPHANE: Python 3 / Scapy / Socket
+
+--------------------------------------------------------------------------------
+1. ÖZET VE PROJE AMACI
+--------------------------------------------------------------------------------
+Bu proje, gerçek zamanlı ses/video iletişimi sağlayan WebRTC (Web Real-Time 
+Communication) ve FaceTime mimarilerinde paket manipülasyonu (Packet Injection) 
+ve girdi doğrulama (Input Validation) zafiyetlerini analiz etmek amacıyla 
+geliştirilmiş akademik tabanlı bir güvenlik test aracıdır. Projenin ana odağı, 
+ağ katmanında manipüle edilen RTP (Real-Time Transport Protocol) paketlerinin, 
+hedef sistemlerin bellek yönetiminde oluşturduğu anomalileri kontrollü bir 
+laboratuvar ortamında gözlemlemektir.
+
+--------------------------------------------------------------------------------
+2. TEHDİT MODELİ VE TEORİK ALTYAPI
+--------------------------------------------------------------------------------
+Medya akış protokolleri, yüksek hızda veri aktarımı sağlamak için genellikle 
+UDP katmanı üzerinde çalışır ve performans amacıyla sıkı bir asenkron mimariye 
+sahiptir. CVE-2025-4122 benzeri kritik ağ zafiyetleri, gelen paketin uzunluk 
+parametrelerinin ve başlık verilerinin (Header) hedef uygulama tarafından 
+doğrulanmadan bellek arabelleğine kopyalanması sonucu oluşur.
+
+Eğer pakette belirtilen payload uzunluk değeri gerçek veriden büyük gösterilirse 
+(Payload_size > Buffer_allocated), sistem hafızasında komşu sektörlerin üzerine 
+yazılabilir. Bu çerçevede geliştirilen yazılım, asimetrik paket yapıları üreterek 
+parser (ayrıştırıcı) motorların kararlılığını test eder.
+
+--------------------------------------------------------------------------------
+3. PROTOKOL ANALİZİ VE MANİPÜLASYON MATRİSİ
+--------------------------------------------------------------------------------
+- RTP Header -> Sequence Number / SSrc -> Sıralı Olmayan ID Enjeksiyonu (Orta)
+- RTP Payload -> Extension Header Length -> Değer Büyütme / Taşma (Kritik)
+- RTCP Compound -> Length Field -> Negatif veya Aşırı Büyük Değer Tanımı (Kritik)
+- STUN / ICE -> Attributes Message -> Hatalı Biçimlendirilmiş Öznitelik (Yüksek)
+
+--------------------------------------------------------------------------------
+4. LAB BULGULARI VE ANALİZ METODOLOJİSİ
+--------------------------------------------------------------------------------
+Yapılan test senaryolarında, hedef cihaz üzerinde koşan test servisinin 
+manipüle edilmiş paketleri ayrıştırırken bellek tüketiminde (Memory Consumption) 
+anomaliler yaşadığı görülmüştür. Girdi uzunluk kontrolünün yapılmadığı laboratuvar 
+yazılımlarında, Heap bellek bölgesinde çökme (Crash/Segmentation Fault) durumları 
+izlenmiştir. Bu durum, savunma mekanizmalarında girdi doğrulamasının önemini 
+doğrulamaktadır.
+
+--------------------------------------------------------------------------------
+5. GÜVENLİK ÖNERİLERİ VE DEFANSİF YAKLAŞIM
+--------------------------------------------------------------------------------
+Ağ paket seviyesindeki bu tür zafiyetleri önlemek için sistem geliştiricilerinin 
+şu adımları atması zorunludur:
+- Sıkı Sınır Kontrolü (Bounds Checking): Ağdan alınan paketin boyutu ile paket 
+  başlığında beyan edilen uzunluk değişkenleri eşleştirilmeden bellek kopyalama 
+  işlemlerine izin verilmemelidir.
+- Güvenli Bellek Yönetimi: C/C++ dilleri yerine bellek güvenliğini derleme 
+  aşamasında sağlayan modern dillerin (Rust, Go) ağ katmanlarında tercih edilmesi 
+  riskleri minimize eder.
+================================================================================
